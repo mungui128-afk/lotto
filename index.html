@@ -887,7 +887,7 @@
           <input class="search-pill" type="email" id="signupEmail" placeholder="example@email.com" required autocomplete="email" />
         </div>
         <div class="modal-actions">
-          <button class="btn btn-primary" type="submit">가입하기</button>
+          <button class="btn btn-primary" type="submit" id="signupSubmitBtn">가입하기</button>
           <button class="btn btn-secondary" type="button" id="signupLaterBtn">나중에</button>
         </div>
       </form>
@@ -925,6 +925,7 @@
     const signupModal = document.getElementById("signupModal");
     const signupForm = document.getElementById("signupForm");
     const signupLaterBtn = document.getElementById("signupLaterBtn");
+    const signupSubmitBtn = document.getElementById("signupSubmitBtn");
 
     const excluded = new Set();
 
@@ -950,7 +951,7 @@
       return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
     }
 
-    signupForm.addEventListener("submit", (e) => {
+    signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("signupName").value.trim();
       const phoneRaw = document.getElementById("signupPhone").value.trim();
@@ -970,14 +971,37 @@
         return;
       }
 
-      localStorage.setItem(SIGNUP_KEY, JSON.stringify({
-        name,
-        phone,
-        email,
-        joinedAt: Date.now(),
-      }));
-      hideSignupPopup();
-      alert(`${name}님, 가입이 완료되었습니다. 앞으로 AI 맞춤 번호 추천을 이용하실 수 있습니다.`);
+      signupSubmitBtn.disabled = true;
+      signupSubmitBtn.textContent = "저장 중…";
+
+      try {
+        const response = await fetch("/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, phone, email }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "가입에 실패했습니다.");
+        }
+
+        localStorage.setItem(SIGNUP_KEY, JSON.stringify({
+          name,
+          phone,
+          email,
+          memberId: data.member?.id,
+          joinedAt: Date.now(),
+        }));
+        hideSignupPopup();
+        alert(`${name}님, 가입이 완료되었습니다. 앞으로 AI 맞춤 번호 추천을 이용하실 수 있습니다.`);
+        signupForm.reset();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        signupSubmitBtn.disabled = false;
+        signupSubmitBtn.textContent = "가입하기";
+      }
     });
 
     signupLaterBtn.addEventListener("click", hideSignupPopup);
