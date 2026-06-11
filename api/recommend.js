@@ -24,7 +24,8 @@ const RECOMMEND_SCHEMA = {
   required: ["numbers", "bonus", "fortune", "explanation"],
 };
 
-const ZODIAC = ["원숭이", "닭", "개", "돼지", "쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양"];
+// (year - 4) % 12 기준: 0=쥐(1984,1996…), 4=용(1988,2000…), 8=원숭이(1992,2004…)
+const ZODIAC = ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"];
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
 function parseGeminiError(status, data) {
