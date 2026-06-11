@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/lotto-picker", "destination": "/index.html" }
+  ]
+}
