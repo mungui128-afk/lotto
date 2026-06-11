@@ -684,7 +684,7 @@
 
       <div class="chat-panel">
         <div class="chat-messages" id="chatMessages" aria-live="polite">
-          <div class="chat-bubble bot">생년월일을 입력한 뒤 「운세 기반 번호 추천」을 누르면 오늘의 운세와 함께 번호를 추천해 드립니다.</div>
+          <div class="chat-bubble bot">생년월일을 입력한 뒤 「운세 기반 번호 추천」을 누르거나, 채팅으로 번호 추천을 요청하세요. AI 한도 초과 시에도 오프라인 운세 추천이 제공됩니다.</div>
         </div>
 
         <div class="chat-input-row">
@@ -738,6 +738,7 @@
     const MIN_POOL = PICK + BONUS;
     const HISTORY_KEY = "lotto-picker-history";
     const BIRTHDATE_KEY = "lotto-picker-birthdate";
+    const AI_CACHE_PREFIX = "lotto-ai-cache-";
 
     const ballsArea = document.getElementById("ballsArea");
     const placeholder = document.getElementById("placeholder");
@@ -1249,6 +1250,29 @@
       chatInput.disabled = isLoading;
     }
 
+    function getRecommendCacheKey(birthDate) {
+      const today = new Date().toISOString().slice(0, 10);
+      const exKey = [...excluded].sort((a, b) => a - b).join(",");
+      return `${AI_CACHE_PREFIX}${birthDate}-${today}-${exKey}`;
+    }
+
+    function loadCachedRecommendation(birthDate) {
+      try {
+        const raw = localStorage.getItem(getRecommendCacheKey(birthDate));
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveCachedRecommendation(birthDate, data) {
+      localStorage.setItem(getRecommendCacheKey(birthDate), JSON.stringify(data));
+    }
+
+    function isRecommendIntent(text) {
+      return /번호.*추천|추천.*번호|로또.*추천|운세.*반영|보너스.*추천|번호.*6개/i.test(text);
+    }
+
     async function callRecommendApi(body) {
       const response = await fetch("/api/recommend", {
         method: "POST",
@@ -1256,13 +1280,38 @@
         body: JSON.stringify(body),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "요청에 실패했습니다.");
+      if (!response.ok) {
+        const err = new Error(data.error || "요청에 실패했습니다.");
+        err.retryAfterSec = data.retryAfterSec;
+        throw err;
+      }
       return data;
     }
 
-    async function requestRecommendation() {
+    function applyRecommendationResult(data) {
+      if (data.notice) appendChatBubble(data.notice, "bot");
+      appendRecommendationBubble(data);
+      renderBalls({ numbers: data.numbers, bonus: data.bonus }, true);
+
+      chatHistory.length = 0;
+      chatHistory.push({
+        role: "assistant",
+        content: `추천 번호: ${data.numbers.join(", ")} + 보너스 ${data.bonus}\n운세: ${data.fortune}\n이유: ${data.explanation}`,
+      });
+    }
+
+    async function requestRecommendation({ useCache = true } = {}) {
       const birthDate = validateBirthDate(true);
       if (!birthDate) return;
+
+      if (useCache) {
+        const cached = loadCachedRecommendation(birthDate);
+        if (cached) {
+          appendChatBubble("오늘 이미 받은 추천 결과를 표시합니다.", "bot");
+          applyRecommendationResult(cached);
+          return;
+        }
+      }
 
       setChatLoading(true);
       const loading = appendChatBubble("운세를 분석하고 번호를 추천하는 중…", "bot", "loading");
@@ -1275,17 +1324,14 @@
         });
 
         loading.remove();
-        appendRecommendationBubble(data);
-        renderBalls({ numbers: data.numbers, bonus: data.bonus }, true);
-
-        chatHistory.length = 0;
-        chatHistory.push({
-          role: "assistant",
-          content: `추천 번호: ${data.numbers.join(", ")} + 보너스 ${data.bonus}\n운세: ${data.fortune}\n이유: ${data.explanation}`,
-        });
+        saveCachedRecommendation(birthDate, data);
+        applyRecommendationResult(data);
       } catch (error) {
         loading.remove();
-        appendChatBubble(error.message, "bot", "error");
+        const msg = error.retryAfterSec
+          ? `${error.message} (약 ${error.retryAfterSec}초 후 재시도)`
+          : error.message;
+        appendChatBubble(msg, "bot", "error");
       } finally {
         setChatLoading(false);
       }
@@ -1298,9 +1344,16 @@
       const text = chatInput.value.trim();
       if (!text) return;
 
+      chatInput.value = "";
+
+      if (isRecommendIntent(text)) {
+        appendChatBubble(text, "user");
+        await requestRecommendation({ useCache: true });
+        return;
+      }
+
       appendChatBubble(text, "user");
       chatHistory.push({ role: "user", content: text });
-      chatInput.value = "";
 
       setChatLoading(true);
       const loading = appendChatBubble("답변을 작성하는 중…", "bot", "loading");
@@ -1314,8 +1367,22 @@
         });
 
         loading.remove();
-        appendChatBubble(data.reply, "bot");
-        chatHistory.push({ role: "assistant", content: data.reply });
+
+        if (data.recommendation) {
+          saveCachedRecommendation(birthDate, {
+            ...data.recommendation,
+            notice: data.fallback ? "AI 한도 초과로 오프라인 운세 추천을 제공합니다." : undefined,
+            fallback: data.fallback,
+            source: data.source,
+          });
+          applyRecommendationResult({
+            ...data.recommendation,
+            notice: data.fallback ? "AI 한도 초과로 오프라인 운세 추천을 제공합니다." : undefined,
+          });
+        } else {
+          appendChatBubble(data.reply, "bot");
+          chatHistory.push({ role: "assistant", content: data.reply });
+        }
       } catch (error) {
         loading.remove();
         appendChatBubble(error.message, "bot", "error");
@@ -1332,7 +1399,9 @@
     });
     chatClearBtn.addEventListener("click", () => {
       chatHistory.length = 0;
-      chatMessages.innerHTML = '<div class="chat-bubble bot">생년월일을 입력한 뒤 「운세 기반 번호 추천」을 누르면 오늘의 운세와 함께 번호를 추천해 드립니다.</div>';
+      const birthDate = birthDateInput.value;
+      if (birthDate) localStorage.removeItem(getRecommendCacheKey(birthDate));
+      chatMessages.innerHTML = '<div class="chat-bubble bot">생년월일을 입력한 뒤 「운세 기반 번호 추천」을 누르거나 채팅으로 번호 추천을 요청하세요. AI 한도 초과 시 오프라인 운세 추천이 제공됩니다.</div>';
     });
 
     buildExcludeGrid();
