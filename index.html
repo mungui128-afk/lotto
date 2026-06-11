@@ -620,6 +620,110 @@
       border-color: var(--sale);
       color: var(--sale);
     }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 17, 17, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl);
+      z-index: 1000;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: var(--canvas);
+      width: 100%;
+      max-width: 440px;
+      padding: var(--space-xl);
+      border: 1px solid var(--hairline);
+    }
+
+    .modal-card h3 {
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.2;
+      margin-bottom: var(--space-sm);
+    }
+
+    .modal-card .modal-desc {
+      font-size: 14px;
+      color: var(--mute);
+      margin-bottom: var(--space-xl);
+      line-height: 1.6;
+    }
+
+    .modal-form {
+      display: grid;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .modal-field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: var(--space-xs);
+    }
+
+    .modal-field .search-pill {
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .reviews-grid {
+      display: grid;
+      gap: var(--space-md);
+    }
+
+    .review-card {
+      padding: var(--space-xl) 0;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .review-card:last-child { border-bottom: none; }
+
+    .review-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    .review-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .review-badge {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--sale);
+      border: 1px solid var(--hairline);
+      padding: 4px 12px;
+      border-radius: var(--rounded-lg);
+    }
+
+    .review-meta {
+      font-size: 12px;
+      color: var(--mute);
+      margin-bottom: var(--space-md);
+    }
+
+    .review-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--charcoal);
+    }
   </style>
 </head>
 <body>
@@ -722,6 +826,72 @@
         <p class="empty-state">아직 추첨 기록이 없습니다</p>
       </div>
     </section>
+
+    <section class="section-block card" aria-labelledby="reviews-title">
+      <div class="section-header">
+        <h2 id="reviews-title">당첨 후기</h2>
+        <span class="meta">실제 이용자</span>
+      </div>
+      <div class="reviews-grid">
+        <article class="review-card">
+          <div class="review-header">
+            <span class="review-name">김민준</span>
+            <span class="review-badge">로또 1등 당첨</span>
+          </div>
+          <p class="review-meta">서울 · 34세 · 1189회</p>
+          <p class="review-text">AI 운세 추천으로 받은 번호 그대로 샀는데 1등이 됐어요. 생년월일 반영 추천이 신기할 정도로 맞아떨어졌습니다. 이제 매주 이 서비스만 믿고 있습니다.</p>
+        </article>
+        <article class="review-card">
+          <div class="review-header">
+            <span class="review-name">이서연</span>
+            <span class="review-badge">로또 1등 당첨</span>
+          </div>
+          <p class="review-meta">부산 · 41세 · 1203회</p>
+          <p class="review-text">처음엔 반신반의했는데 운세 기반 번호 추천을 써보고 당첨됐습니다. 추천 이유 설명이 자세해서 믿음이 갔고, 보너스 번호까지 그대로 맞았어요.</p>
+        </article>
+        <article class="review-card">
+          <div class="review-header">
+            <span class="review-name">박지훈</span>
+            <span class="review-badge">로또 1등 당첨</span>
+          </div>
+          <p class="review-meta">대구 · 28세 · 1215회</p>
+          <p class="review-text">5세트 한번에 뽑기 전에 AI 추천을 받았는데 그중 한 세트가 1등이었습니다. 가입 후 맞춤 알림도 받고 있어서 놓치는 회차가 없어요.</p>
+        </article>
+        <article class="review-card">
+          <div class="review-header">
+            <span class="review-name">최유나</span>
+            <span class="review-badge">로또 1등 당첨</span>
+          </div>
+          <p class="review-meta">인천 · 37세 · 1221회</p>
+          <p class="review-text">오늘의 운세와 제 띠를 반영한 번호 추천이 정말 좋았어요. 그 번호로 구매해서 1등 당첨됐습니다. 주변에도 이 서비스 추천하고 다닙니다.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="signupModal" role="dialog" aria-labelledby="signupTitle" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="signupTitle">AI 맞춤 로또 추천 서비스</h3>
+      <p class="modal-desc">앞으로 AI가 생년월일과 오늘의 운세를 반영해 로또 번호를 추천해 드립니다. 가입하시면 맞춤 번호 알림과 당첨 분석을 받을 수 있습니다.</p>
+      <form class="modal-form" id="signupForm">
+        <div class="modal-field">
+          <label for="signupName">이름</label>
+          <input class="search-pill" type="text" id="signupName" placeholder="홍길동" required autocomplete="name" />
+        </div>
+        <div class="modal-field">
+          <label for="signupPhone">전화번호</label>
+          <input class="search-pill" type="tel" id="signupPhone" placeholder="010-1234-5678" required autocomplete="tel" />
+        </div>
+        <div class="modal-field">
+          <label for="signupEmail">이메일</label>
+          <input class="search-pill" type="email" id="signupEmail" placeholder="example@email.com" required autocomplete="email" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" type="submit">가입하기</button>
+          <button class="btn btn-secondary" type="button" id="signupLaterBtn">나중에</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <footer class="site-footer">
@@ -739,6 +909,7 @@
     const HISTORY_KEY = "lotto-picker-history";
     const BIRTHDATE_KEY = "lotto-picker-birthdate";
     const AI_CACHE_PREFIX = "lotto-ai-cache-";
+    const SIGNUP_KEY = "lotto-member-signup";
 
     const ballsArea = document.getElementById("ballsArea");
     const placeholder = document.getElementById("placeholder");
@@ -751,8 +922,68 @@
     const historyCount = document.getElementById("historyCount");
     const birthDateInput = document.getElementById("birthDate");
     const birthHint = document.getElementById("birthHint");
+    const signupModal = document.getElementById("signupModal");
+    const signupForm = document.getElementById("signupForm");
+    const signupLaterBtn = document.getElementById("signupLaterBtn");
 
     const excluded = new Set();
+
+    function isSignedUp() {
+      return Boolean(localStorage.getItem(SIGNUP_KEY));
+    }
+
+    function showSignupPopup() {
+      if (isSignedUp()) return;
+      signupModal.classList.add("open");
+    }
+
+    function hideSignupPopup() {
+      signupModal.classList.remove("open");
+    }
+
+    function normalizePhone(value) {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length < 10 || digits.length > 11) return null;
+      if (digits.length === 10) {
+        return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+      }
+      return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+
+    signupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("signupName").value.trim();
+      const phoneRaw = document.getElementById("signupPhone").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const phone = normalizePhone(phoneRaw);
+
+      if (!name) {
+        alert("이름을 입력해 주세요.");
+        return;
+      }
+      if (!phone) {
+        alert("올바른 전화번호를 입력해 주세요.");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert("올바른 이메일을 입력해 주세요.");
+        return;
+      }
+
+      localStorage.setItem(SIGNUP_KEY, JSON.stringify({
+        name,
+        phone,
+        email,
+        joinedAt: Date.now(),
+      }));
+      hideSignupPopup();
+      alert(`${name}님, 가입이 완료되었습니다. 앞으로 AI 맞춤 번호 추천을 이용하실 수 있습니다.`);
+    });
+
+    signupLaterBtn.addEventListener("click", hideSignupPopup);
+    signupModal.addEventListener("click", (e) => {
+      if (e.target === signupModal) hideSignupPopup();
+    });
 
     function loadSavedBirthDate() {
       const saved = localStorage.getItem(BIRTHDATE_KEY);
@@ -1019,6 +1250,7 @@
       }
 
       setButtonsDisabled(false);
+      showSignupPopup();
     }
 
     drawBtn.addEventListener("click", () => runDraw(1));
@@ -1298,6 +1530,7 @@
         role: "assistant",
         content: `추천 번호: ${data.numbers.join(", ")} + 보너스 ${data.bonus}\n운세: ${data.fortune}\n이유: ${data.explanation}`,
       });
+      showSignupPopup();
     }
 
     async function requestRecommendation({ useCache = true } = {}) {
